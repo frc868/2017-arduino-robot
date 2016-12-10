@@ -1,87 +1,133 @@
 //MOTORS -----------------
-#define LEFT_MOTOR_1 1
-#define LEFT_MOTOR_2 2
-#define RIGHT_MOTOR_1 3
-#define RIGHT_MOTOR_2 4
+#define MOTOR_LEFT_1 1
+#define MOTOR_LEFT_2 2
+#define MOTOR_RIGHT_1 3
+#define MOTOR_RIGHT_2 4
 
 #define MOTOR_SHOOT_LEFT 9
 #define MOTOR_SHOOT_RIGHT 10
 
 //INPUTS ----------------------
 
-#define BUTTON_FORWARD 5
-#define BUTTON_BACKWARD 6
+#define BUTTON_SHOOT 7
 
-#define BUTTON_MOTOR_ON 7
-#define BUTTON_MOTOR_OFF 8
+#define POT_MOTOR_LEFT 0
+#define POT_MOTOR_RIGHT 1
 
-//VARS ----------------------
+//VALS -------------------------
 
-#define DRIVE_POWER_FW 1800
-#define DRIVE_POWER_BK 1200
-#define DRIVE_POWER_NIL 1500
-#define SHOOT_POWER 1800
-#define SHOOT_POWER_NIL 1500
+int leftDriveTime = 1500;
+int rightDriveTime = 1500;
+int leftShootTime = 1500;
+int rightShootTime = 1500;
+int delayTime = 3000;
 
-int driveDelay = 1500;
-int shootDelay = 1500;
+int q_leftDrive = 1500;
+int q_rightDrive = 1500;
+int q_leftShoot = 1500;
+int q_rightShoot = 1500;
+int q_delayTime = 3000;
+
+int increment = 50;
 
 //SETUP ------------------------
 
 void setup() {
-  pinMode(LEFT_MOTOR_1, OUTPUT);
-  pinMode(LEFT_MOTOR_2, OUTPUT);
-  pinMode(RIGHT_MOTOR_1, OUTPUT);
-  pinMode(RIGHT_MOTOR_2, OUTPUT);
+	pinMode(MOTOR_LEFT_1, OUTPUT);
+	pinMode(MOTOR_LEFT_2, OUTPUT);
+	pinMode(MOTOR_RIGHT_1, OUTPUT);
+	pinMode(MOTOR_RIGHT_2, OUTPUT);
+	pinMode(MOTOR_SHOOT_LEFT, OUTPUT);
+	pinMode(MOTOR_SHOOT_RIGHT, OUTPUT);
 
-  pinMode(MOTOR_SHOOT_LEFT, OUTPUT);
-  pinMode(MOTOR_SHOOT_RIGHT, OUTPUT);
-
-  pinMode(BUTTON_FORWARD, INPUT);
-  pinMode(BUTTON_BACKWARD, INPUT);
-
-  pinMode(BUTTON_MOTOR_ON, INPUT);
-  pinMode(BUTTON_MOTOR_OFF, INPUT);
+	pinMode(BUTTON_SHOOT, INPUT);
 }
 
 //LOOP ----------------------------
 
 void loop() {
-  //drive
-  if(digitalRead(BUTTON_FORWARD) == HIGH) {
-    driveDelay = DRIVE_POWER_FW;
-  } else if(digitalRead(BUTTON_BACKWARD) == HIGH) {
-    driveDelay = DRIVE_POWER_BK;
-  } else {
-    driveDelay = DRIVE_POWER_NIL;
-  }
+	
+	leftDriveTime = calcTime(analogRead(POT_MOTOR_LEFT) / 1024);
+	rightDriveTime = calcTime(analogRead(POT_MOTOR_RIGHT) / 1024);
+	
+	if(digitalRead(BUTTON_SHOOT) == HIGH) {
+		leftShootTime = calcTime(0.8);
+		rightShootTime = calcTime(1); //They need to be run at different speeds?
+	} else {
+		leftShootTime = calcTime(0);
+		leftShootTime = calcTime(0);
+	}
 
-  //shoot
-  if(digitalRead(BUTTON_MOTOR_ON) == HIGH) {
-    shootDelay = SHOOT_POWER;
-  } else if(digitalRead(BUTTON_MOTOR_OFF) == HIGH) {
-    shootDelay = SHOOT_POWER_NIL;
-  }
+	checkQueue();
+}
 
-  //DRIVE
-  digitalWrite(LEFT_MOTOR_1, HIGH);
-  digitalWrite(LEFT_MOTOR_2, HIGH);
-  digitalWrite(RIGHT_MOTOR_1, HIGH);
-  digitalWrite(RIGHT_MOTOR_2, HIGH);
-  delayMicroseconds(driveDelay);
-  digitalWrite(LEFT_MOTOR_1, LOW);
-  digitalWrite(LEFT_MOTOR_2, LOW);
-  digitalWrite(RIGHT_MOTOR_1, LOW);
-  digitalWrite(RIGHT_MOTOR_2, LOW);
+void checkQueue() {
+	
+	//QUEUE RESET
+	
+	if(q_delayTime <= 0) {
+		resetVals();
+		setHigh();
+	}
 
-  //SHOOT
-  
-  digitalWrite(MOTOR_SHOOT_LEFT, HIGH);
-  digitalWrite(MOTOR_SHOOT_RIGHT, HIGH);
-  delayMicroseconds(shootDelay);
-  digitalWrite(MOTOR_SHOOT_LEFT, LOW);
-  digitalWrite(MOTOR_SHOOT_RIGHT, LOW);
+	//DETERMINE OFF SWITCHES
+	
+	if(q_leftDrive <= 0) {
+		digitalWrite(MOTOR_LEFT_1, LOW);
+		digitalWrite(MOTOR_LEFT_2, LOW);
+	}
 
-  delayMicroseconds(1000);
+	if(q_rightDrive <= 0) {
+		digitalWrite(MOTOR_RIGHT_1, LOW);
+		digitalWrite(MOTOR_RIGHT_2, LOW);
+	}
+
+	if(q_leftShoot <= 0) {
+		digitalWrite(MOTOR_SHOOT_LEFT, LOW);
+	}
+
+	if(q_rightShoot <= 0) {
+		digitalWrite(MOTOR_SHOOT_RIGHT, LOW);
+	}
+	
+	//DECREMENT AND DELAY
+	
+	decrementVals();
+	delayMicroseconds(increment);
+}
+
+void decrementVals() {
+	q_leftDrive -= increment;
+	q_rightDrive -= increment;
+	q_leftShoot -= increment;
+	q_rightShoot -= increment;
+	q_delayTime -= increment;
+}
+
+void resetVals() {
+	q_leftDrive = leftDriveTime;
+	q_rightDrive = rightDriveTime;
+	q_leftShoot = leftShootTime;
+	q_rightShoot = rightShootTime;
+	q_delayTime = delayTime;
+}
+
+void setHigh() {
+	digitalWrite(MOTOR_LEFT_1, HIGH);
+	digitalWrite(MOTOR_LEFT_2, HIGH);
+
+	digitalWrite(MOTOR_RIGHT_1, HIGH);
+	digitalWrite(MOTOR_RIGHT_2, HIGH);
+
+	digitalWrite(MOTOR_SHOOT_LEFT, HIGH);
+	digitalWrite(MOTOR_SHOOT_RIGHT, HIGH);
+}
+
+int calcTime(double power) {
+	if(power > 1 || power < -1) { //not necessary, motor won't run with invalid values
+		return 1500;
+	} else {
+		return 1500 + (450 * power);
+	}
 }
 
