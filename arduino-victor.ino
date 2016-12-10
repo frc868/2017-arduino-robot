@@ -6,7 +6,7 @@
 #define SHOOT_LEFT 7
 #define SHOOT_RIGHT 8
 
-#define BUTTON_SHOOT 10
+#define BUTTON_SHOOT 3
 #define POT_LEFT 0
 #define POT_RIGHT 1
 
