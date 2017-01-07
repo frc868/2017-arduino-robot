@@ -7,13 +7,6 @@
 #define MOTOR_SHOOT_LEFT 9
 #define MOTOR_SHOOT_RIGHT 10
 
-//INPUTS ----------------------
-
-#define BUTTON_SHOOT 7
-
-#define POT_MOTOR_LEFT 0
-#define POT_MOTOR_RIGHT 1
-
 //VALS -------------------------
 
 int leftDriveTime = 1500;
@@ -33,26 +26,37 @@ int increment = 50;
 //SETUP ------------------------
 
 void setup() {
+	Serial.begin(9600);
+	
 	pinMode(MOTOR_LEFT_1, OUTPUT);
 	pinMode(MOTOR_LEFT_2, OUTPUT);
 	pinMode(MOTOR_RIGHT_1, OUTPUT);
 	pinMode(MOTOR_RIGHT_2, OUTPUT);
 	pinMode(MOTOR_SHOOT_LEFT, OUTPUT);
 	pinMode(MOTOR_SHOOT_RIGHT, OUTPUT);
-
-	pinMode(BUTTON_SHOOT, INPUT);
 }
 
 //LOOP ----------------------------
 
 void loop() {
 	
-	leftDriveTime = calcTime(analogRead(POT_MOTOR_LEFT) / 1024);
-	rightDriveTime = calcTime(analogRead(POT_MOTOR_RIGHT) / 1024);
+	while(Serial.available() > 3); //pop off excess
 	
-	if(digitalRead(BUTTON_SHOOT) == HIGH) {
+	double left, right;
+	int shoot;
+	
+	if(Serial.available == 3) {
+		left = ((double)Serial.read() / 128.0) - 1;
+		right = ((double)Serial.read() / 128.0) - 1;
+		shoot = (int)Serial.read();
+	}
+	
+	leftDriveTime = calcTime(left)
+	rightDriveTime = calcTime(right);
+	
+	if(shoot) {
 		leftShootTime = calcTime(0.8);
-		rightShootTime = calcTime(1); //They need to be run at different speeds?
+		rightShootTime = calcTime(1);
 	} else {
 		leftShootTime = calcTime(0);
 		leftShootTime = calcTime(0);
